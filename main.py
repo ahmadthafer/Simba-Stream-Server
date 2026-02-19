@@ -1,34 +1,21 @@
 import os
-import telebot
+from pyrogram import Client, filters
 
-# سحب التوكن من Variables في Railway
+# سحب المعلومات من Railway Variables
+API_ID = os.getenv("API_ID")
+API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-# رابط سيرفرك اللي شغال هسة
 SERVER_URL = "https://simba-stream-server-production.up.railway.app"
 
-bot = telebot.TeleBot(BOT_TOKEN)
+app = Client("simba_bot", api_id=int(API_ID), api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# التعامل مع الفيديوهات والملفات لرد الرابط فوراً
-@bot.message_handler(content_types=['video', 'document'])
-def send_direct_link(message):
-    try:
-        # استخراج الـ File ID
-        file_id = message.video.file_id if message.video else message.document.file_id
-        
-        # تكوين الرابط المباشر
-        direct_link = f"{SERVER_URL}/stream/{file_id}"
-        
-        # الرد المباشر على الرسالة
-        bot.reply_to(message, f"✅ تم استلام الفيلم يا أحمد!\n\nرابط البث المباشر:\n`{direct_link}`")
-        print(f"تم إرسال رابط للملف: {file_id}")
-    except Exception as e:
-        bot.reply_to(message, f"❌ حدث خطأ: {e}")
-
-# أمر البداية للتأكد أن البوت صاحي
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message, "هلا بيك يا أحمد! البوت شغال هسة. حول لي أي فيلم وراح أعطيك الرابط المباشر فوراً.")
+@app.on_message(filters.video | filters.document)
+async def send_link(client, message):
+    # الحصول على الـ File ID باستخدام Pyrogram
+    file_id = message.video.file_id if message.video else message.document.file_id
+    direct_link = f"{SERVER_URL}/stream/{file_id}"
+    
+    await message.reply_text(f"✅ تم استلام الفيلم!\n\nرابط البث المباشر:\n`{direct_link}`")
 
 if __name__ == "__main__":
-    print("البوت بدأ العمل.. بانتظار الأفلام!")
-    bot.infinity_polling()
+    app.run()
