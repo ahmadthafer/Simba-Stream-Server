@@ -1,22 +1,23 @@
 import os
-import logging
-from pyrogram import Client, filters
+import telebot # مكتبة أسهل وأسرع للرد الفوري
 
-# سيقوم الكود الآن بسحب المعلومات تلقائياً من Railway Variables
-API_ID = os.getenv("API_ID")
-API_HASH = os.getenv("API_HASH")
+# سحب التوكن من Railway
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-# تأكد أن هذا الرابط هو رابط سيرفرك الصحيح
 SERVER_URL = "https://simba-stream-server-production.up.railway.app"
 
-app = Client("simba_bot", api_id=int(API_ID), api_hash=API_HASH, bot_token=BOT_TOKEN)
+bot = telebot.TeleBot(BOT_TOKEN)
 
-@app.on_message(filters.video | filters.document)
-async def send_link(client, message):
+@bot.message_handler(content_types=['video', 'document'])
+def send_link(message):
+    # الحصول على الـ File ID
     file_id = message.video.file_id if message.video else message.document.file_id
-    # هذا هو السطر اللي راح يعطيك الرابط المباشر
+    
+    # تكوين الرابط المباشر
     direct_link = f"{SERVER_URL}/stream/{file_id}"
-    await message.reply_text(f"✅ أبشر يا أحمد.. هذا رابط فيلمك المباشر:\n\n`{direct_link}`")
+    
+    # الرد المباشر عليك
+    bot.reply_to(message, f"✅ أبشر يا أحمد.. هذا رابط فيلمك المباشر:\n\n{direct_link}")
 
 if __name__ == "__main__":
-    app.run()
+    print("البوت شغال هسة يا بطل...")
+    bot.infinity_polling()
